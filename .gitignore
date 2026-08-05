@@ -7,8 +7,11 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Data files
-data/raw/
-data/processed/
+data/raw/*
+data/processed/*
+
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 
 # Environment files
 .env
