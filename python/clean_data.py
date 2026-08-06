@@ -21,7 +21,34 @@ tropical = storms[
 ]
 
 
-# Select useful columns
+# Convert NOAA damage format into dollars
+def convert_damage(value):
+    if pd.isna(value):
+        return 0
+
+    value = str(value).strip()
+
+    multiplier = 1
+
+    if value.endswith("K"):
+        multiplier = 1_000
+        value = value[:-1]
+
+    elif value.endswith("M"):
+        multiplier = 1_000_000
+        value = value[:-1]
+
+    elif value.endswith("B"):
+        multiplier = 1_000_000_000
+        value = value[:-1]
+
+    try:
+        return float(value) * multiplier
+    except:
+        return 0
+
+
+# Create cleaned dataset
 catastrophe = tropical[
     [
         "EVENT_ID",
@@ -29,21 +56,37 @@ catastrophe = tropical[
         "BEGIN_DATE_TIME",
         "STATE",
         "CZ_NAME",
-        "MAGNITUDE",
-        "DAMAGE_PROPERTY",
-        "DAMAGE_CROPS"
+        "DAMAGE_PROPERTY"
     ]
-]
+].copy()
 
 
-print(catastrophe.head())
+# Clean damage values
+catastrophe["property_damage"] = (
+    catastrophe["DAMAGE_PROPERTY"]
+    .apply(convert_damage)
+)
 
-print("\nRows:")
-print(len(catastrophe))
+
+# Create year variable
+catastrophe["year"] = pd.to_datetime(
+    catastrophe["BEGIN_DATE_TIME"]
+).dt.year
 
 
-# Save processed file
+# Remove original damage column
+catastrophe = catastrophe.drop(
+    columns=["DAMAGE_PROPERTY"]
+)
+
+
+# Save processed dataset
 catastrophe.to_csv(
     "data/processed/catastrophe_events.csv",
     index=False
 )
+
+
+print("Cleaned catastrophe dataset created!")
+print("Rows:", len(catastrophe))
+print(catastrophe.head())
