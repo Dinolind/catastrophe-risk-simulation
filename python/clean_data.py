@@ -52,6 +52,7 @@ def convert_damage(value):
 catastrophe = tropical[
     [
         "EVENT_ID",
+        "EPISODE_ID",
         "EVENT_TYPE",
         "BEGIN_DATE_TIME",
         "STATE",

@@ -51,3 +51,5 @@ tropical_events = storms[
 ]
 
 print(tropical_events["EVENT_TYPE"].value_counts())
+
+print("EPISODE_ID" in storms.columns)
