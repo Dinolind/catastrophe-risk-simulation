@@ -1,5 +1,6 @@
 CREATE TABLE catastrophe_events (
-    event_id INTEGER PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER,
     event_type VARCHAR(50),
     event_date DATE,
     state VARCHAR(50),
