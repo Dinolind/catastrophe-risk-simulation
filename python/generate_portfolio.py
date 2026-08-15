@@ -21,7 +21,6 @@ states = [
     "ALABAMA"
 ]
 
-
 # Generate policy data
 portfolio = pd.DataFrame({
     "policy_id": range(1, n + 1),

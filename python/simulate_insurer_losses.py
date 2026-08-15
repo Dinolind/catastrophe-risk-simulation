@@ -14,6 +14,27 @@ policies_by_state = {
     for state, group in policies.groupby("state")
 }
 
+# Historical damaging hurricane episode counts by state
+states = [
+    "FLORIDA",
+    "LOUISIANA",
+    "TEXAS",
+    "GEORGIA",
+    "NORTH CAROLINA",
+    "ALABAMA",
+    "SOUTH CAROLINA"
+]
+
+state_probabilities = [
+    13 / 37,
+    7 / 37,
+    6 / 37,
+    4 / 37,
+    3 / 37,
+    2 / 37,
+    2 / 37
+]
+
 states = list(policies_by_state.keys())
 
 num_simulations = 1000
@@ -36,7 +57,10 @@ for simulation in range(num_simulations):
     for event in range(number_of_hurricanes):
 
         # Randomly choose an affected state
-        affected_state = np.random.choice(states)
+        affected_state = np.random.choice(
+            states,
+            p=state_probabilities
+        )
 
         state_policies = policies_by_state[affected_state]
 
@@ -56,11 +80,17 @@ for simulation in range(num_simulations):
             replace=False
         )
 
-        # Damage ratio between 5% and 60%
-        damage_ratios = np.random.uniform(
-            0.05,
-            0.60,
-            affected_count
+        # Simulate damage ratios. Most affected properties experience modest damage, while severe damage remains possible but less common.
+        damage_ratios = np.random.beta(
+            a=1.5,
+            b=8,
+            size=affected_count
+        )
+
+        damage_ratios = np.clip(
+        damage_ratios,
+        0.01,
+        0.75
         )
 
         gross_damage = (
@@ -89,6 +119,7 @@ for simulation in range(num_simulations):
 annual_losses = np.array(annual_losses)
 
 expected_loss = annual_losses.mean()
+std_loss = annual_losses.std()
 var_95 = np.percentile(annual_losses, 95)
 var_99 = np.percentile(annual_losses, 99)
 
@@ -110,10 +141,19 @@ var_99_loss_ratio = (
     var_99 / annual_premium
 )
 
+prob_zero_loss = np.mean(
+    annual_losses == 0
+)
+
+prob_loss_above_premium = np.mean(
+    annual_losses > annual_premium
+)
+
 
 print("=== Insurer Catastrophe Simulation ===")
 
 print(f"Expected Annual Loss: ${expected_loss:,.2f}")
+print(f"Annual Loss Standard Deviation: ${std_loss:,.2f}")
 print(f"95% VaR: ${var_95:,.2f}")
 print(f"99% VaR: ${var_99:,.2f}")
 print(f"99% TVaR: ${tvar_99:,.2f}")
@@ -133,6 +173,16 @@ print(
     f"{var_99_loss_ratio:.1%}"
 )
 
+print(
+    f"Probability of Zero Cat Loss: "
+    f"{prob_zero_loss:.1%}"
+)
+
+print(
+    f"Probability Cat Loss Exceeds Premium: "
+    f"{prob_loss_above_premium:.1%}"
+)
+
 results = pd.DataFrame({
     "simulation": range(1, num_simulations + 1),
     "annual_loss": annual_losses
@@ -142,3 +192,15 @@ results.to_csv(
     "data/processed/insurer_simulation_results.csv",
     index=False
 )
+
+test_damage = np.random.beta(
+    1.5,
+    8,
+    100000
+)
+
+print("\n=== Damage Ratio Check ===")
+print("Mean:", test_damage.mean())
+print("Median:", np.median(test_damage))
+print("90th percentile:", np.percentile(test_damage, 90))
+print("99th percentile:", np.percentile(test_damage, 99))
